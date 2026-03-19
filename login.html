@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXION BPO — Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --bg2: #181c27; --bg3: #1e2235; --bg4: #252a3d;
+    --text: #e8eaf6; --text2: #b0b8d8; --text3: #6b7394;
+    --accent: #4f8eff; --cyan: #00d4b4; --danger: #f43f5e;
+    --success: #10d4a0; --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-wrap { width: 100%; max-width: 400px; }
+  .logo-area { text-align: center; margin-bottom: 36px; }
+  .logo-area h1 { font-size: 32px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, var(--accent), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .logo-area p { color: var(--text3); font-size: 13px; margin-top: 6px; font-family: var(--mono); letter-spacing: 2px; text-transform: uppercase; }
+  .card { background: var(--bg2); border: 1px solid var(--border2); border-radius: 16px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .card h2 { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--text); }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; font-family: var(--mono); }
+  input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 9px; padding: 11px 14px; font-size: 14px; color: var(--text); font-family: var(--font); outline: none; transition: border-color .15s; }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--text3); }
+  .btn-login { width: 100%; background: linear-gradient(135deg, var(--accent), #3a6fd8); border: none; border-radius: 10px; padding: 13px; color: #fff; font-size: 14px; font-weight: 700; font-family: var(--font); cursor: pointer; margin-top: 8px; transition: opacity .15s, transform .1s; }
+  .btn-login:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-login:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .error-msg { background: rgba(244,63,94,.1); border: 1px solid rgba(244,63,94,.3); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--danger); margin-top: 14px; display: none; }
+  .error-msg.show { display: block; }
+  .forgot-wrap { text-align: right; margin-top: 6px; }
+  .forgot-wrap a { font-size: 12px; color: var(--text3); text-decoration: none; }
+  .footer-note { text-align: center; margin-top: 24px; font-size: 12px; color: var(--text3); }
+  .loader { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .reset-panel { display: none; margin-top: 20px; padding: 16px; background: var(--bg3); border: 1px solid var(--border2); border-radius: 10px; }
+  .reset-panel.show { display: block; }
+  .reset-panel p { font-size: 12.5px; color: var(--text2); margin-bottom: 10px; }
+  .btn-ghost { background: none; border: 1px solid var(--border2); border-radius: 8px; padding: 8px 16px; color: var(--text2); font-size: 12px; font-family: var(--font); cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="login-wrap">
+  <div class="logo-area">
+    <h1>AXION</h1>
+    <p>BPO Financeiro</p>
+  </div>
+  <div class="card">
+    <h2>Entrar no sistema</h2>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="email" placeholder="seu@email.com.br" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      <div class="forgot-wrap">
+        <a href="#" onclick="toggleReset();return false;">Esqueci minha senha</a>
+      </div>
+    </div>
+    <button class="btn-login" id="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="error-msg" id="error-msg"></div>
+    <div class="reset-panel" id="reset-panel">
+      <p>Informe seu e-mail acima e clique no botão para receber o link de redefinição.</p>
+      <button class="btn-ghost" onclick="doReset()">Enviar link de redefinição</button>
+    </div>
+  </div>
+  <div class="footer-note">AXION BPO &copy; 2025 — Acesso exclusivo para equipe autorizada</div>
+</div>
+<script>
+const SUPABASE_URL = 'https://antvpjvzeiabhekbydtj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFudHZwanZ6ZWlhYmhla2J5ZHRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4OTM2NDYsImV4cCI6MjA4OTQ2OTY0Nn0.BuhJXFRoQaSo--11FucIedKz6JeOVuFrShzZwzfayac';
+const { createClient } = supabase;
+const _sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+(async function() {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) window.location.href = 'bpo-financeiro-supabase.html';
+})();
+async function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const pwd = document.getElementById('password').value;
+  const btn = document.getElementById('btn-login');
+  const err = document.getElementById('error-msg');
+  err.classList.remove('show');
+  if (!email || !pwd) { showError('Preencha e-mail e senha.'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>Entrando…';
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password: pwd });
+  if (error) {
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar';
+    let msg = 'Credenciais inválidas.';
+    if (error.message.includes('Invalid login')) msg = 'E-mail ou senha incorretos.';
+    if (error.message.includes('Email not confirmed')) msg = 'Confirme seu e-mail antes de fazer login.';
+    showError(msg);
+    return;
+  }
+  const { data: profile } = await _sb.from('profiles').select('status').eq('id', data.user.id).single();
+  if (profile && profile.status === 'inativo') {
+    await _sb.auth.signOut();
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar';
+    showError('Usuário inativo. Contate o administrador.');
+    return;
+  }
+  window.location.href = 'bpo-financeiro-supabase.html';
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+function showError(msg) { const el = document.getElementById('error-msg'); el.textContent = msg; el.classList.add('show'); }
+function toggleReset() { document.getElementById('reset-panel').classList.toggle('show'); }
+async function doReset() {
+  const email = document.getElementById('email').value.trim();
+  if (!email) { showError('Informe seu e-mail para redefinir a senha.'); return; }
+  const { error } = await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/bpo-financeiro-supabase.html' });
+  if (error) { showError('Erro ao enviar e-mail: ' + error.message); return; }
+  document.getElementById('reset-panel').innerHTML = '<p style="color:var(--success)">✓ Link enviado! Verifique sua caixa de entrada.</p>';
+}
+</script>
+</body>
+</html>
