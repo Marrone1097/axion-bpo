@@ -1,0 +1,7 @@
+﻿AXION â€” pasta AUTORIZADOS (deploy Netlify)
+ModificaÃ§Ã£o: MOD-012
+Data e hora: 19/03/2026 23:31:42
+Build referÃªncia: 2026-03-19-r11
+Arquivos: index.html, bpo-financeiro-FINAL.html, axion-cloud.js
+
+Demo local: cliente 9020 â€” EbenÃ©zer MÃ³veis Planejados & Montagem Ltda (montagem + mÃ³veis planejados).

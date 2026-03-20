@@ -1,0 +1,5 @@
+﻿Pasta AUTORIZADOS â€” arquivos para publicar no Netlify (deploy manual).
+
+Veja tambÃ©m: ATUALIZADO-MOD012_2026-03-19-2331.txt (data, hora e nÃºmero MOD desta entrega).
+
+ConteÃºdo: index.html, bpo-financeiro-FINAL.html, axion-cloud.js
